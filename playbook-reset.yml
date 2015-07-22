@@ -1,0 +1,18 @@
+---
+
+- hosts: dmccue
+  remote_user: root
+  gather_facts: no
+  tasks:
+    # set ip address from cobbler
+    - debug: msg="IP address is: {{ cobbler.interfaces.em1.ip_address }}"
+    - name: set cobbler to rebuild host
+      local_action: shell ./rebuild.py '{{ ldap_user }}' '{{ ldap_pass }}' '{{ cobbler.name }}'
+    - name: reboot
+      shell: reboot
+    - name: wait for restart
+      local_action: wait_for port=22
+                    host="{{ ansible_ssh_host | default(inventory_hostname) }}"
+                    search_regex=OpenSSH
+                    delay=300
+                    timeout=600

@@ -1,0 +1,71 @@
+#  - name: Import RPM keys
+#    action: rpm_key state=present key={{ item }}
+#    with_items: keys
+
+  # - name: Template repo files (release)
+  #  template: src={{ item }}.j2 dest=/etc/yum.repos.d/{{ item }}
+  #  with_items:
+  #  - eucalyptus-release.repo
+  #  - euca2ools-release.repo
+  #  - elrepo.repo
+  #  - epel.repo
+  #  when: not nightlies
+
+- name: Add repos - epel,euca,euca2ools
+  yum: state=installed name={{ item }}
+  with_items:
+    - http://downloads.eucalyptus.com/software/eucalyptus/{{ euca_version }}/centos/6/x86_64/epel-release-6.noarch.rpm
+    - http://downloads.eucalyptus.com/software/eucalyptus/{{ euca_version }}/centos/6/x86_64/eucalyptus-release-{{ euca_version }}.el6.noarch.rpm
+    - http://downloads.eucalyptus.com/software/euca2ools/{{ euca2ools_version }}/centos/6/x86_64/euca2ools-release-{{ euca2ools_version }}.el6.noarch.rpm
+  register: repo_result
+  when: not nightlies
+
+- name: yum clean
+  shell: yum clean all
+  when: repo_result.changed
+
+- name: Template repo files (nightly)
+  template: src={{ item }}.j2 dest=/etc/yum.repos.d/{{ item }}
+  with_items:
+  - eucalyptus-nightly.repo
+  - euca2ools-release.repo
+  - elrepo.repo
+  - epel.repo
+  when: nightlies
+
+- name: Update all packages
+  yum: name=* state=latest
+
+- name: Install packages
+  yum: name={{ item }} state=installed enablerepo=base,updates
+  with_items:
+  - libselinux-python
+  - tuned
+  - unzip
+  - ntp
+  tags:
+  - packages
+
+- name: Fix java version
+  yum: name=http://mirror.centos.org/centos/6.4/updates/x86_64/Packages/java-1.7.0-openjdk-1.7.0.25-2.3.10.4.el6_4.x86_64.rpm state=installed enablerepo=base,updates
+  when: ansible_distribution_version == '6.4'
+
+- name: Ensure SELinux is disabled
+  selinux: policy=targeted state=permissive
+  notify: reboot server
+
+- name: Turn on NTP and start on boot
+  service: name=ntpd enabled=yes state=started
+  tags:
+  - ntp
+
+- name: Check for a CC
+  shell: /sbin/service eucalyptus-cc status
+  register: ccreturn
+  ignore_errors: true
+
+- name: Disable firewall (unless its a CC)
+  service: name=iptables enabled=no state=stopped
+  when: ccreturn.rc|int == 1
+  tags:
+  - firewall

@@ -1,0 +1,28 @@
+---
+
+- hosts: dmccue
+  remote_user: root
+  gather_facts: no
+  tasks:
+    - name: sudo - setup deploy group
+      lineinfile: dest=/etc/sudoers.d/deploy
+                  owner=root group=root mode=0440
+                  create=yes
+                  line="%deploy ALL=(ALL) NOPASSWD:ALL"
+                  validate='visudo -cf %s'
+                  state=present
+    - name: sudo - disable requiretty
+      lineinfile: dest=/etc/sudoers
+                  regexp="^Defaults.*requiretty.*"
+                  line="#Defaults requiretty"
+                  backrefs=yes
+                  validate='visudo -cf %s'
+                  state=present
+    - name: create deploy group
+      group: name=deploy gid=2500
+    - name: create deploy user
+      user: name=deploy comment="Deploy user" uid=2500 group=deploy
+    - name: copy deploy ssh key
+      authorized_key: user=deploy
+                      key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+                      key_options='no-port-forwarding'

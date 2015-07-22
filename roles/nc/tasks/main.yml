@@ -1,0 +1,67 @@
+---
+
+- name: Set tuned profile
+  shell: tuned-adm profile enterprise-storage
+
+- name: Install the NC packages
+  yum: name=eucalyptus-nc state=latest enablerepo=eucalyptus-release,euca2ools-release,elrepo,epel,base,updates
+  notify:
+  - start nc
+  when: not nightlies
+
+- name: Install eucanetd packages
+  yum: name=eucanetd state=latest enablerepo=eucalyptus-release,euca2ools-release,elrepo,epel,base,updates
+  notify:
+  - start eucanetd
+  when: network_mode == 'EDGE' and not nightlies
+
+- name: Install the NC packages
+  yum: name=eucalyptus-nc state=latest enablerepo=eucalyptus-nightly,euca2ools-release,elrepo,epel,base,updates
+  notify:
+  - start nc
+  when: nightlies
+
+- name: template the interface file
+  template: src=ifconfig_bridge_interface.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ bridge_iface }}
+  when: ansible_{{ bridge }} is undefined
+
+- name: template the bridge interface file
+  template: src=ifconfig_bridge_{{ bridge_type }}.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ bridge }}
+  when: ansible_{{ bridge }} is undefined
+
+- name: explicitly restart networking services
+  service: name=network state=restarted
+
+- name: Get facts update to reflect new networking
+  setup:
+
+- name: Template the configuration file
+  template: src=../../common/templates/eucalyptus.conf.j2 dest=/etc/eucalyptus/eucalyptus.conf
+  notify:
+  - restart nc
+  - restart eucanetd
+
+- name: modprobe kvm modules
+  shell: /sbin/modprobe kvm_intel
+  when: hypervisor == "kvm"
+  register: kvm_loaded
+
+- name: Fail on lack of VT
+  fail: msg="VT is not enabled on this system, please enable it in the system BIOS before proceeding."
+  when: kvm_loaded.rc == 1
+
+- name: Remove virbr0
+  shell: virsh {{ item }} default
+  when: ansible_interfaces['virbr0'] is defined
+  with_items:
+  - net-destroy
+  - net-undefine
+  notify:
+  - restart libvirt
+
+- name: start eucanetd
+  service: name=eucanetd enabled=yes state=running
+  when: network_mode == 'EDGE'
+
+- name: start node controller
+  service: name=eucalyptus-nc enabled=yes state=running

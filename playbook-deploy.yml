@@ -1,0 +1,147 @@
+- hosts: all
+  remote_user: deploy
+  become: yes
+  vars:
+  - nfs: true
+  roles:
+  - common
+  tasks:
+  - name: Install NFS packages
+    yum: name=nfs-utils,nfs-utils-lib state=installed enablerepo=base,updates
+    when: nfs
+  - name: NFS - Mount
+    mount: fstype=nfs name=/mnt/sos src=storage-main.eucalyptus-systems.com:/srv/prc_data/sos opts="rsize=8192,wsize=8192,timeo=14,intr" state=mounted
+    when: nfs
+
+
+
+- hosts: nc
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  roles:
+  - nc
+  post_tasks:
+  - setup:
+
+
+
+- hosts: cc
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  roles:
+  - cc
+
+
+
+- hosts: sc
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  roles:
+  - sc
+  post_tasks:
+  - include: roles/sc/tasks/sc-keys.yml
+  handlers:
+  - include: roles/sc/handlers/main.yml
+
+
+
+- hosts: walrus
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  roles:
+  - walrus
+  post_tasks:
+  - include: roles/walrus/tasks/walrus-keys.yml
+  handlers:
+  - include: roles/walrus/handlers/main.yml
+
+
+
+- hosts: clc
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  roles:
+  - clc
+
+
+
+
+#---- SETUP ----
+
+# - hosts: walrus
+#   tasks:
+#   - include: roles/walrus/tasks/walrus-keys.yml
+#   handlers:
+#   - include: roles/walrus/handlers/main.yml
+
+# - hosts: sc
+#   tasks:
+#   - include: roles/sc/tasks/sc-keys.yml
+#   handlers:
+#   - include: roles/sc/handlers/main.yml
+
+- hosts: clc
+  tasks:
+  - include: roles/clc/tasks/component-reg.yml
+  handlers:
+  - include: roles/clc/handlers/main.yml
+
+- hosts: cc
+  tasks:
+  - include: roles/cc/tasks/cluster-reg.yml
+
+- hosts: nc
+  tasks:
+  - include: roles/nc/tasks/nc-keys.yml
+  handlers:
+  - include: roles/nc/handlers/main.yml
+
+
+
+  # tasks:
+  #   - name: yum install packages
+  #     yum: state=present name=eucalyptus-cloud
+  #   - name: euca_conf initialize
+  #     command: euca_conf --initialize
+  #     ignore_errors: yes
+  #   - name: eucalyptus.conf - setup
+  #     template: src=templates/eucalyptus.conf.j2 dest=/etc/eucalyptus/eucalyptus.conf owner=root group=root mode=0644
+  #     notify: restart eucalyptus-cloud
+  #   - name: start clc
+  #     service: name=eucalyptus-cloud enabled=yes state=running
+  #   - name: Wait for services to come online
+  #     command: euca-describe-services -T eucalyptus | grep ENABLED
+  #     changed_when: false
+  #   - name: Check admin.zip
+  #     stat: path=/root/admin.zip
+  #     register: admin_zip
+  #   - name: Get credentials
+  #     command: euca_conf --get-credentials=/root/admin.zip
+  #     when: not admin_zip.stat.exists
+  #   - name: Unzip credentials
+  #     unarchive: copy=no src=/root/admin.zip dest=/root
+  #   - name: Source credentials
+  #     lineinfile: dest=/root/.bashrc state=present line="source /root/eucarc; source /root/iamrc"
+  #   - name: Create eucalyptus account and loginprofile
+  #     command: euare-useraddloginprofile --as-account eucalyptus -u admin -p password; euare-userupdateinfo --as-account eucalyptus -u admin -k email -i test@test.com
+  #   - name: Create demo account and loginprofile
+  #     command: euare-accountcreate -a demo; euare-useraddloginprofile --as-account demo -u admin -p password
+  # handlers:
+  #   - include: handlers/handlers.yml
+
+
+
+
+#    echo export S3_URL="\"http://$(hostname -i):8773/services/objectstorage\"" >> /root/eucarc; \
+
+#    euca_conf --register-cluster --partition az1 --component cluster1 --host 1.2.3.4; \
+#    euca_conf --register-sc --partition az1 --component storage1 --host 1.2.3.4; \
+#    euca-modify-property -p az1.storage.blockstoragemanager=das; \
+#    euca_conf --register-walrusbackend --partition az1 --component walrus1 --host 1.2.3.4; \
+#    euca-modify-property -p objectstorage.providerclient=walrus; \
+#    euca_conf --register-nodes "1.2.3.4"; \

@@ -1,0 +1,21 @@
+---
+- name: restart server
+  shell: reboot
+
+- name: restart eucanetd
+  service: name=eucanetd enabled=yes state=restarted
+
+- name: restart eucalyptus-nc
+  service: name=eucalyptus-nc enabled=yes state=restarted
+
+- name: restart eucalyptus-cc
+  service: name=eucalyptus-cc enabled=yes state=restarted
+
+- name: restart eucalyptus-cloud
+  service: name=eucalyptus-cloud enabled=yes state=restarted
+
+- name: restart networking services
+  service: name=network state=restarted
+
+- name: restart libvirt
+  service: name=libvirtd state=restarted
