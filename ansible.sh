@@ -6,7 +6,6 @@ clchostname=$(grep -A1 '\[clc\]' hosts | tail -1)
 clchost=$(dig +short ${clchostname})
 forklimit=20
 vaultpassfile=~/.vault_pass.txt
-arg2=${2}
 
 [ "$1" == "reset" ] && { ansible-playbook --vault-password-file=${vaultpassfile} -f${forklimit} -k -i cobbler.py playbook-reset.yml -v; exit; }
 [ "$1" == "setupinitial" ] && { ansible-playbook --vault-password-file=${vaultpassfile} -f${forklimit} -k -i cobbler.py playbook-setupinitial.yml -v; exit; }
@@ -15,7 +14,7 @@ arg2=${2}
 [ "$1" == "vars" ] && { ansible-playbook --vault-password-file=${vaultpassfile} -f${forklimit} -b -i cobbler.py vars.yml -e "hosts=${2}" -v; exit; }
 
 
-
+echo Usage $0 [reset,setupinitial,deploy,ping]
 
 #ansible -k -i cobbler.py dmccue -u root -m shell -a 'uptime'
 #ansible-playbook -f20 -i hosts -b -u deploy playbook-deploy.yml
