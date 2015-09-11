@@ -1,18 +1,19 @@
-    - name: set tuned profile
-      action: command tuned-adm profile enterprise-storage
+- name: set tuned profile
+  shell: tuned-adm profile enterprise-storage
+  changed_when: false
 
-    - name: Install the Walrus packages
-      action: yum name=eucalyptus-walrus state=latest enablerepo=eucalyptus-release,euca2ools-release,elrepo,epel,base,updates
-      when: not nightlies
+- name: Install the Walrus packages
+  yum: name=eucalyptus-walrus state=latest enablerepo=eucalyptus-release,euca2ools-release,elrepo,epel,base,updates
+  when: not nightlies
 
-    - name: Install the Walrus packages
-      action: yum name=eucalyptus-walrus state=latest enablerepo=eucalyptus-nightly,euca2ools-release,elrepo,epel,base,updates
-      when: nightlies
+- name: Install the Walrus packages
+  yum: name=eucalyptus-walrus state=latest enablerepo=eucalyptus-nightly,euca2ools-release,elrepo,epel,base,updates
+  when: nightlies
 
-    - name: Template the configuration file
-      action: template src=../../common/templates/eucalyptus.conf.j2 dest=/etc/eucalyptus/eucalyptus.conf
-      notify: 
-      - restart eucalyptus cloud
+- name: Template the configuration file
+  template: src=../../common/templates/eucalyptus.conf.j2 dest=/etc/eucalyptus/eucalyptus.conf
+  notify:
+  - restart eucalyptus cloud
 
-    - name: Start Walrus
-      service: name=eucalyptus-cloud state=started
+- name: Start Walrus
+  service: name=eucalyptus-cloud state=started

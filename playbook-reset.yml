@@ -4,12 +4,21 @@
   remote_user: root
   gather_facts: no
   tasks:
-    # set ip address from cobbler
-    - debug: msg="IP address is: {{ cobbler.interfaces.em1.ip_address }}"
+#    - name: debug output
+#      debug: var=hostvars[inventory_hostname]
+#    # set ip address from cobbler
+#    - name: display IP address
+#      debug: msg="IP address is  {{ cobbler.interfaces.em1.ip_address }}"
     - name: set cobbler to rebuild host
       local_action: shell ./rebuild.py '{{ ldap_user }}' '{{ ldap_pass }}' '{{ cobbler.name }}'
     - name: reboot
       shell: reboot
+    - name: remove known_hosts key - ip
+      local_action: known_hosts name={{ cobbler.interfaces.em1.ip_address }} state=absent
+      ignore_errors: true
+    - name: remove known_hosts key - hostname
+      local_action: known_hosts name={{ inventory_hostname }} state=absent
+      ignore_errors: true
     - name: wait for restart
       local_action: wait_for port=22
                     host="{{ ansible_ssh_host | default(inventory_hostname) }}"

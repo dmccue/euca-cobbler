@@ -1,13 +1,13 @@
 # Registration steps are not expected to work for multiple components (e.g. multi-cluster or HA), yet.
 
 - name: Check for Walrus
-  shell: /usr/sbin/euca_conf --list-walruses | grep -q {{ primary_walrus }}
+  shell: /usr/sbin/euca_conf --list-walrusbackends | grep -q {{ primary_walrus }}
   register: walrus_return
   ignore_errors: true
 
 - name: Register Walrus
-  command: /usr/sbin/euca_conf --no-scp --no-rsync --no-sync --register-walrus --partition walrus --host ${hostvars.{$item}.ansible_$vnet_pub.ipv4.address} --component walrus-${hostvars.{$item}.ansible_hostname}
-  with_items: ${groups.walrus[0]}
+  shell: /usr/sbin/euca_conf --no-scp --no-rsync --no-sync --register-walrusbackend --partition walrus --host {{ hostvars[item]['ansible_{{ vnet_pri }}']['ipv4']['address'] }} --component walrus-{{ hostvars[item]['ansible_hostname'] }} 
+  with_items: groups.walrus
   when: walrus_return.rc|int == 1
 
 - name: Check for SC
@@ -16,8 +16,8 @@
   ignore_errors: true
 
 - name: Register SC
-  command: /usr/sbin/euca_conf --no-scp --no-rsync --no-sync --register-sc --partition {{ partition_name }} --host ${hostvars.{$item}.ansible_$vnet_pub.ipv4.address} --component sc-${hostvars.{$item}.ansible_hostname}
-  with_items: ${groups.sc[0]}
+  shell: /usr/sbin/euca_conf --no-scp --no-rsync --no-sync --register-sc --partition {{ partition_name }} --host {{ hostvars[item]['ansible_{{ vnet_pri }}']['ipv4']['address'] }} --component sc-{{ hostvars[item]['ansible_hostname'] }}
+  with_items: groups.sc
   when: sc_return.rc|int == 1
 
 - name: Check for CC
@@ -26,8 +26,8 @@
   ignore_errors: true
 
 - name: Register CC
-  command: /usr/sbin/euca_conf --no-scp --no-rsync --no-sync --register-cluster --partition {{ partition_name }} --host ${hostvars.{$item}.ansible_$vnet_pub.ipv4.address} --component cc-${hostvars.{$item}.ansible_hostname}
-  with_items: ${groups.cc[0]}
+  shell: /usr/sbin/euca_conf --no-scp --no-rsync --no-sync --register-cluster --partition {{ partition_name }} --host ${hostvars.{$item}.ansible_$vnet_pub.ipv4.address} --component cc-${hostvars.{$item}.ansible_hostname}
+  with_items: groups.cc
   when: cc_return.rc|int == 1
 
 - name: Pull cluster (node and cc) keys
@@ -41,21 +41,21 @@
 - name: Wait for Java system components
   wait_for: host={{ item }} port=8773 state=started
   with_items:
-  - "{{ groups.clc[0] }}"
-  - "{{ groups.walrus[0] }}"
-  - "{{ groups.sc[0] }}"
+  - groups.clc
+  - groups.walrus
+  - groups.sc
 
 - name: Install ELB utils
   yum: name=eucalyptus-load-balancer-image state=installed
   register: result
 
 - name: Get Administrator Credentials
-  command: euca-get-credentials -e / -a eucalyptus -u admin /root/admin.zip creates=/root/admin.zip
+  shell: euca-get-credentials -e / -a eucalyptus -u admin /root/admin.zip creates=/root/admin.zip
   tags:
   - creds
 
 - name: Unpack admin credentials
-  command: /usr/bin/unzip -qou /root/admin.zip -d /root/admin-creds creates=/root/admin-creds/eucarc
+  shell: /usr/bin/unzip -qou /root/admin.zip -d /root/admin-creds creates=/root/admin-creds/eucarc
   tags:
   - creds
 
@@ -83,11 +83,11 @@
   pause: minutes=2
 
 - name: Get Administrator Credentials
-  command: euca-get-credentials -e / -a eucalyptus -u admin /root/admin.zip creates=/root/admin.zip
+  shell: euca-get-credentials -e / -a eucalyptus -u admin /root/admin.zip creates=/root/admin.zip
   tags:
   - creds
 
 - name: Unpack admin credentials
-  command: /usr/bin/unzip -qou /root/admin.zip -d /root/admin-creds creates=/root/admin-creds/eucarc
+  shell: /usr/bin/unzip -qou /root/admin.zip -d /root/admin-creds creates=/root/admin-creds/eucarc
   tags:
   - creds

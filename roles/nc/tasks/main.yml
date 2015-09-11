@@ -2,6 +2,7 @@
 
 - name: Set tuned profile
   shell: tuned-adm profile enterprise-storage
+  changed_when: false
 
 - name: Install the NC packages
   yum: name=eucalyptus-nc state=latest enablerepo=eucalyptus-release,euca2ools-release,elrepo,epel,base,updates
@@ -45,6 +46,7 @@
   shell: /sbin/modprobe kvm_intel
   when: hypervisor == "kvm"
   register: kvm_loaded
+  changed_when: false
 
 - name: Fail on lack of VT
   fail: msg="VT is not enabled on this system, please enable it in the system BIOS before proceeding."

@@ -1,27 +1,28 @@
-    - name: Set tuned profile
-      action: command tuned-adm profile latency-performance
+- name: Set tuned profile
+  shell: tuned-adm profile latency-performance
+  changed_when: false
 
-    - name: Install the CC packages
-      action: yum name=eucalyptus-cc state=latest enablerepo=eucalyptus-release,euca2ools-release,elrepo,epel,base,updates
-      when : not nightlies
+- name: Install the CC packages
+  yum: name=eucalyptus-cc state=latest enablerepo=eucalyptus-release,euca2ools-release,elrepo,epel,base,updates
+  when: not nightlies
 
-    - name: Install the CC packages
-      action: yum name=eucalyptus-cc state=latest enablerepo=eucalyptus-nightly,euca2ools-release,elrepo,epel,base,updates
-      when : nightlies
-      
-    - name: Template the configuration file
-      action: template src=../../common/templates/eucalyptus.conf.j2 dest=/etc/eucalyptus/eucalyptus.conf
+- name: Install the CC packages
+  yum: name=eucalyptus-cc state=latest enablerepo=eucalyptus-nightly,euca2ools-release,elrepo,epel,base,updates
+  when: nightlies
 
-    - name: Restart CC
-      action: service name=eucalyptus-cc state=started
+- name: Template the configuration file
+  template: src=../../common/templates/eucalyptus.conf.j2 dest=/etc/eucalyptus/eucalyptus.conf
 
-    - name: Wait for CC services
-      action: wait_for port=8774 delay=10
+- name: Restart CC
+  service: name=eucalyptus-cc state=started
 
-    - name: Turn on IP fowarding
-      action: lineinfile dest=/etc/sysctl.conf regexp="^net.ipv4.ip_forward = 0" line="net.ipv4.ip_forward = 1"
-      register: sysctl_ipf
+- name: Wait for CC services
+  wait_for: port=8774 delay=10
 
-    - name: Re-read sysctl values
-      action: command sysctl -e -q -p /etc/sysctl.conf
-      when: sysctl_ipf.changed
+- name: Turn on IP fowarding
+  lineinfile: dest=/etc/sysctl.conf backrefs=yes regexp="^net.ipv4.ip_forward = 0" line="net.ipv4.ip_forward = 1"
+  register: sysctl_ipf
+
+- name: Re-read sysctl values
+  shell: sysctl -e -q -p /etc/sysctl.conf
+  when: sysctl_ipf.changed

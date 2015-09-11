@@ -28,4 +28,5 @@ if not serverresult:
 handle = server.get_system_handle(systemname, token)
 server.modify_system(handle, "netboot_enabled", "true", token)
 server.modify_system(handle, "comment", "{'Date': '170102'}\nRebuild last initiated at: " + time.strftime("%c"), token)
+#server.power_system(handle, "reboot", token)
 server.save_system(handle, token)

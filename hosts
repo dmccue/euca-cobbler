@@ -1,3 +1,5 @@
+[ufs]
+odc-f-25.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.67
 [clc]
 odc-f-09.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.51
 [walrus]
@@ -5,8 +7,8 @@ odc-f-02.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.44
 [cc]
 odc-f-28.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.70
 [sc]
-odc-f-25.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.67
+odc-f-28.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.70
 [nc]
 odc-f-31.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.73
 odc-f-36.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.78
-odc-f-17.prc.eucalyptus-systems.com ansible_ssh_host=10.104.10.59
+odc-d-30.prc.eucalyptus-systems.com ansible_ssh_host=10.104.1.209

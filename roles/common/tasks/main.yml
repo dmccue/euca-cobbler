@@ -59,6 +59,10 @@
   tags:
   - ntp
 
+- name: clock sync
+  shell: hwclock --systohc
+  changed_when: false
+
 - name: Check for a CC
   shell: /sbin/service eucalyptus-cc status
   register: ccreturn

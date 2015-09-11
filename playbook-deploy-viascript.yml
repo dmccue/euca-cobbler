@@ -1,11 +1,12 @@
-#- hosts: all
-#  remote_user: deploy
-#  become: yes
+- hosts: all
+  remote_user: deploy
+  become: yes
 #  vars:
 #  - nfs: true
 #  roles:
 #  - common
-#  tasks:
+  tasks:
+  - script: ../euca-install-scripts/common.sh
 #  - name: Install NFS packages
 #    yum: name=nfs-utils,nfs-utils-lib state=installed enablerepo=base,updates
 #    when: nfs
@@ -14,11 +15,19 @@
 #    when: nfs
 
 
+- hosts: ufs 
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  tasks:
+  - script: ../euca-install-scripts/ufs.sh
 
-#- hosts: clc
-#  remote_user: deploy
-#  gather_facts: no
-#  become: yes
+- hosts: clc
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  tasks:
+  - script: ../euca-install-scripts/clc.sh
 #  roles:
 #  - clc
 
@@ -27,6 +36,8 @@
 #  remote_user: deploy
 #  gather_facts: no
 #  become: yes
+#  tasks:
+#  - script: ../euca-install-scripts/cc.sh
 #  roles:
 #  - nc
 #  post_tasks:
@@ -34,19 +45,23 @@
 
 
 
-#- hosts: cc
-#  remote_user: deploy
-#  gather_facts: no
-#  become: yes
+- hosts: cc
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  tasks:
+  - script: ../euca-install-scripts/cc.sh 
 #  roles:
 #  - cc
 
 
 
-#- hosts: sc
-#  remote_user: deploy
-#  gather_facts: no
-#  become: yes
+- hosts: sc
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  tasks:
+  - script: ../euca-install-scripts/sc.sh   
 #  roles:
 #  - sc
 #  post_tasks:
@@ -56,10 +71,12 @@
 
 
 
-#- hosts: walrus
-#  remote_user: deploy
-#  gather_facts: no
-#  become: yes
+- hosts: walrus
+  remote_user: deploy
+  gather_facts: no
+  become: yes
+  tasks:
+  - script: ../euca-install-scripts/walrus.sh
 #  roles:
 #  - walrus
 #  post_tasks:
@@ -72,14 +89,14 @@
 
 #---- SETUP ----
 
-- hosts: walrus
-  remote_user: deploy
-  gather_facts: yes
-  become: yes
-  tasks:
-  - include: roles/walrus/tasks/walrus-keys.yml
-  handlers:
-  - include: roles/walrus/handlers/main.yml
+#- hosts: walrus
+#  remote_user: deploy
+#  gather_facts: yes
+#  become: yes
+#  tasks:
+#  - include: roles/walrus/tasks/walrus-keys.yml
+#  handlers:
+#  - include: roles/walrus/handlers/main.yml
 
 # - hosts: sc
 #   tasks:
@@ -87,24 +104,24 @@
 #   handlers:
 #   - include: roles/sc/handlers/main.yml
 
-- hosts: clc
-  remote_user: deploy
-  gather_facts: yes
-  become: yes
-  tasks:
-  - include: roles/clc/tasks/component-reg.yml
-  handlers:
-  - include: roles/clc/handlers/main.yml
+#- hosts: clc
+#  remote_user: deploy
+#  gather_facts: yes
+#  become: yes
+#  tasks:
+#  - include: roles/clc/tasks/component-reg.yml
+#  handlers:
+#  - include: roles/clc/handlers/main.yml
 
-- hosts: cc
-  tasks:
-  - include: roles/cc/tasks/cluster-reg.yml
+#- hosts: cc
+#  tasks:
+#  - include: roles/cc/tasks/cluster-reg.yml
 
-- hosts: nc
-  tasks:
-  - include: roles/nc/tasks/nc-keys.yml
-  handlers:
-  - include: roles/nc/handlers/main.yml
+#- hosts: nc
+#  tasks:
+#  - include: roles/nc/tasks/nc-keys.yml
+#  handlers:
+#  - include: roles/nc/handlers/main.yml
 
 
 

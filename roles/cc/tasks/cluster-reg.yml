@@ -7,7 +7,7 @@
   - node-pk.pem
   - cloud-pk.pem
   - cloud-cert.pem
-#  when: not inventory_hostname in groups.clc 
+#  when: not inventory_hostname in groups.clc
 
 - name: Restart CC
   action: service name=eucalyptus-cc state=restarted
@@ -17,7 +17,7 @@
   when: inventory_hostname in groups.clc
 
 - name: Wait for service
-  action: wait_for port=8774 delay=15
+  action: wait_for port=8774 delay=2
 
 #- name: Check Registration of nodes
 #  action: command /usr/sbin/euca_conf --list-nodes | grep -q ${hostvars.{$item}.ansible_$bridge.ipv4.address}
